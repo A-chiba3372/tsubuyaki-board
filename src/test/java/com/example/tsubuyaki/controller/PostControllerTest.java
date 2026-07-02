@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -82,6 +83,23 @@ class PostControllerTest {
                 .getContentAsString();
 
         assertThat(html).contains("alice", "今日の共有です", "2026-05-23 19:15", "avatar--blue");
+    }
+
+    @Test
+    @DisplayName("投稿一覧_投稿あり_詳細ページへのリンクを表示する")
+    void 投稿一覧_投稿あり_詳細ページへのリンクを表示する() throws Exception {
+        Post post = new Post("alice", "詳細で読む投稿です", Instant.parse("2026-05-23T10:15:00Z"));
+        ReflectionTestUtils.setField(post, "id", 10L);
+        given(postService.search(null)).willReturn(List.of(post));
+
+        String html = mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("posts/list"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(html).contains("href=\"/posts/10\"", ">詳細<");
     }
 
     @Test
